@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#10251f"><title>Jurassic World — Park Builder</title>
+<style>
+:root{color-scheme:dark;--bg:#101b19;--panel:#172723;--line:#345047;--gold:#e9c56b;--mint:#9bd7a6;--muted:#a8b9ae}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:#f4f2e9;font:14px Inter,system-ui,Segoe UI,sans-serif;overflow:hidden}
+button{font:inherit;color:inherit;cursor:pointer;border:1px solid var(--line);background:#20372f;border-radius:9px;padding:9px 12px}button:hover{border-color:var(--gold);background:#2b483d}button.active{background:#8b7138;border-color:#e7c66e;color:#fff}
+#app{height:100dvh;display:grid;grid-template-rows:60px 1fr}
+header{display:flex;align-items:center;gap:16px;padding:0 18px;background:#12211d;border-bottom:1px solid var(--line);z-index:2}
+.brand{font-weight:900;letter-spacing:.06em;color:var(--gold);white-space:nowrap}.brand small{display:block;font-size:9px;letter-spacing:.22em;color:var(--muted);font-weight:600}
+.stats{display:flex;gap:8px;margin-left:auto}.stat{background:#1b3029;border:1px solid var(--line);padding:7px 12px;border-radius:9px;min-width:88px}.stat span{display:block;color:var(--muted);font-size:10px;text-transform:uppercase}.stat b{font-size:15px}
+main{min-height:0;display:grid;grid-template-columns:230px 1fr 260px}
+aside{background:var(--panel);padding:14px;overflow:auto;border-right:1px solid var(--line)}aside.right{border-right:0;border-left:1px solid var(--line)}
+h2{font-size:12px;text-transform:uppercase;letter-spacing:.13em;color:var(--gold);margin:4px 0 12px}
+.section{margin-bottom:20px}.tools{display:grid;grid-template-columns:1fr 1fr;gap:7px}.tools button{min-height:65px;text-align:left;font-size:12px}.tools button strong{display:block;font-size:21px;margin-bottom:3px}
+#viewport{position:relative;overflow:hidden;background:#183b32;min-width:0}canvas{display:block;width:100%;height:100%;touch-action:none}
+.overlay{position:absolute;left:14px;top:14px;display:flex;gap:8px;flex-wrap:wrap;pointer-events:none}.chip{background:#10231edb;border:1px solid #557265;border-radius:8px;padding:8px 11px;font-size:11px;color:#dce9df}
+#toast{position:absolute;bottom:18px;left:50%;transform:translateX(-50%);background:#13231ff0;border:1px solid var(--gold);padding:10px 16px;border-radius:10px;opacity:0;transition:opacity .2s;pointer-events:none;white-space:nowrap}
+#toast.show{opacity:1}.mission{background:#21372e;border:1px solid #526b59;border-radius:10px;padding:12px;line-height:1.5}.mission b{color:var(--gold)}.muted{color:var(--muted);font-size:12px;line-height:1.5}
+.actionrow{display:flex;gap:7px;margin-top:9px}.actionrow button{flex:1}.wide{width:100%;margin-top:7px}
+#inspect{font-size:12px;color:var(--muted);line-height:1.6}.key{color:#fff;background:#31473e;padding:2px 5px;border-radius:4px}
+@media(max-width:900px){main{grid-template-columns:175px 1fr}aside.right{display:none}.tools button{min-height:58px;padding:7px}header{gap:8px;padding:0 9px}.stats{gap:4px}.stat{min-width:60px;padding:5px 7px}.stat b{font-size:12px}.brand{font-size:12px}}
+@media(max-width:560px){#app{grid-template-rows:54px 1fr}main{grid-template-columns:112px 1fr}aside{padding:8px}.tools{grid-template-columns:1fr}.tools button{min-height:48px;font-size:10px}.tools button strong{display:inline;font-size:16px;margin-right:5px}.stats .stat:nth-child(3){display:none}.brand small{display:none}.overlay{left:6px;top:6px}.chip{font-size:9px;padding:5px 7px}}
+</style></head>
+<body><div id="app">
+<header><div class="brand">JURASSIC WORLD<small>PARK BUILDER • BROWSER EDITION</small></div>
+<div class="stats"><div class="stat"><span>Caixa</span><b id="money">$ 120.000</b></div><div class="stat"><span>Visitantes</span><b id="guests">0</b></div><div class="stat"><span>Reputação</span><b id="rating">★ 1.0</b></div><div class="stat"><span>Dinossauros</span><b id="dinoCount">0</b></div></div></header>
+<main><aside><div class="section"><h2>Modo de jogo</h2><div class="actionrow"><button id="campaign" class="active">Campanha</button><button id="sandbox">Sandbox</button></div></div>
+<div class="section"><h2>Construir parque</h2><div class="tools" id="tools">
+<button data-tool="path"><strong>🟫</strong>Caminho</button><button data-tool="fence"><strong>🚧</strong>Cerca</button>
+<button data-tool="forest"><strong>🌳</strong>Vegetação</button><button data-tool="water"><strong>💧</strong>Lago</button>
+<button data-tool="herbivore"><strong>🦕</strong>Recinto herbívoro</button><button data-tool="carnivore"><strong>🦖</strong>Recinto carnívoro</button>
+<button data-tool="hotel"><strong>🏨</strong>Hotel</button><button data-tool="food"><strong>🍔</strong>Restaurante</button>
+<button data-tool="shop"><strong>🛍️</strong>Loja</button><button data-tool="power"><strong>⚡</strong>Gerador</button>
+</div><button class="wide" id="demolish">🧹 Demolir construção</button></div>
+<div class="section"><h2>Controles</h2><p class="muted">Clique no terreno para construir. Arraste para mover a câmera. Use a roda do mouse para zoom.</p><div class="actionrow"><button id="zoomOut">−</button><button id="zoomIn">＋</button><button id="resetView">⌖</button></div></div>
+<div class="section"><button class="wide" id="save">💾 Salvar parque</button><button class="wide" id="load">📂 Carregar parque</button><button class="wide" id="reset">↻ Novo parque</button></div></aside>
+<div id="viewport"><canvas id="game"></canvas><div class="overlay"><div class="chip" id="modeLabel">CAMPANHA • Ilha inicial</div><div class="chip" id="clock">Dia 1 • 08:00</div></div><div id="toast"></div></div>
+<aside class="right"><div class="section"><h2>Objetivos da campanha</h2><div class="mission" id="mission"><b>Primeiros passos</b><br>Construa um recinto herbívoro, adicione um dinossauro e atraia 20 visitantes.</div></div>
+<div class="section"><h2>Central de operações</h2><div id="inspect">Selecione uma construção ou escolha uma ferramenta para começar.</div></div>
+<div class="section"><h2>Expedições</h2><p class="muted">A equipe de pesquisa está pronta para descobrir novas espécies.</p><button class="wide" id="expedition">🧬 Iniciar expedição — $ 8.000</button></div>
+<div class="section"><h2>Resumo do parque</h2><div class="muted" id="summary">Nenhuma estrutura construída.</div></div></aside></main></div>
+<script>
+(()=>{
+const canvas=document.getElementById('game'),ctx=canvas.getContext('2d'),view=document.getElementById('viewport');
+const $=id=>document.getElementById(id);
+const W=26,H=26;let world=[],objects=[],mode='campaign',tool=null,money=120000,guests=0,rating=1,day=1,hour=8,zoom=1,cam={x:0,y:0},drag=null,hover=null,selected=null,tick=0,toastTimer;
+const defs={path:{name:'Caminho',cost:120,emoji:'🟫'},fence:{name:'Cerca',cost:180,emoji:'🚧'},forest:{name:'Vegetação',cost:250,emoji:'🌳'},water:{name:'Lago',cost:450,emoji:'💧'},herbivore:{name:'Recinto herbívoro',cost:9000,emoji:'🦕'},carnivore:{name:'Recinto carnívoro',cost:14000,emoji:'🦖'},hotel:{name:'Hotel',cost:12000,emoji:'🏨'},food:{name:'Restaurante',cost:4500,emoji:'🍔'},shop:{name:'Loja',cost:3500,emoji:'🛍️'},power:{name:'Gerador',cost:6000,emoji:'⚡'}};
+function initWorld(){world=[];for(let y=0;y<H;y++)for(let x=0;x<W;x++)world.push({x,y,kind:(Math.random()>.93?'rock':'grass')});objects=[];objects.push({x:12,y:13,type:'path'});objects.push({x:13,y:13,type:'path'});money=mode==='sandbox'?999999:120000;guests=0;rating=1;day=1;hour=8;selected=null;updateUI()}
+function notify(s){const t=$('toast');t.textContent=s;t.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.classList.remove('show'),1900)}
+function resize(){const r=view.getBoundingClientRect(),d=Math.min(devicePixelRatio||1,2);canvas.width=r.width*d;canvas.height=r.height*d;ctx.setTransform(d,0,0,d,0,0);draw()}
+function tile(x,y){const s=34*zoom,ox=view.clientWidth/2+cam.x,oy=90+cam.y;return{x:ox+(x-y)*s,y:oy+(x+y)*s*.5}}
+function screenToTile(px,py){const s=34*zoom,ox=view.clientWidth/2+cam.x,oy=90+cam.y;let a=(px-ox)/s,b=(py-oy)/(s*.5);return{x:Math.floor((a+b)/2),y:Math.floor((b-a)/2)}}
+function diamond(p,color,stroke){const s=34*zoom;ctx.beginPath();ctx.moveTo(p.x,p.y);ctx.lineTo(p.x+s,p.y+s*.5);ctx.lineTo(p.x,p.y+s);ctx.lineTo(p.x-s,p.y+s*.5);ctx.closePath();ctx.fillStyle=color;ctx.fill();if(stroke){ctx.strokeStyle=stroke;ctx.stroke()}}
+function draw(){const w=view.clientWidth,h=view.clientHeight;ctx.clearRect(0,0,w,h);ctx.fillStyle='#214a3b';ctx.fillRect(0,0,w,h);
+for(let y=0;y<H;y++)for(let x=0;x<W;x++){const p=tile(x,y),t=world[y*W+x];diamond(p,t.kind==='rock'?'#53675a':((x+y)%2?'#477b4d':'#4b8050'),'#386342')}
+for(const o of objects){const p=tile(o.x,o.y),s=34*zoom;ctx.save();if(o.type==='path'){diamond(p,'#b6a17a','#6e634e')}else if(o.type==='water'){diamond(p,'#338fa0','#74c6ce');ctx.fillStyle='#b5e8df';ctx.fillRect(p.x-3,p.y+s*.42,8,2)}else if(o.type==='forest'){ctx.fillStyle='#244b32';ctx.beginPath();ctx.ellipse(p.x,p.y+s*.35,s*.34,s*.15,0,0,7);ctx.fill();ctx.fillStyle='#2f7441';ctx.beginPath();ctx.arc(p.x,p.y-s*.05,s*.29,0,7);ctx.fill();ctx.fillStyle='#4d9851';ctx.beginPath();ctx.arc(p.x-5*zoom,p.y-s*.12,s*.18,0,7);ctx.fill()}else if(o.type==='fence'){ctx.strokeStyle='#d6c7a0';ctx.lineWidth=3*zoom;ctx.beginPath();ctx.moveTo(p.x-s*.45,p.y+s*.48);ctx.lineTo(p.x,p.y+s*.72);ctx.lineTo(p.x+s*.45,p.y+s*.48);ctx.stroke()}else{const colors={herbivore:'#c6a85c',carnivore:'#b85c45',hotel:'#d8d1b5',food:'#e1a34f',shop:'#6ea9a0',power:'#c6b84e'};ctx.fillStyle='#28382f';ctx.fillRect(p.x-s*.32,p.y-s*.18,s*.64,s*.55);ctx.fillStyle=colors[o.type]||'#aaa';ctx.fillRect(p.x-s*.28,p.y-s*.25,s*.56,s*.43);ctx.fillStyle='#e9e0c5';ctx.fillRect(p.x-s*.07,p.y+s*.03,s*.14,s*.22);ctx.font=(18*zoom)+'px sans-serif';ctx.textAlign='center';ctx.fillText(defs[o.type].emoji,p.x,p.y-s*.18)}ctx.restore()}
+if(hover&&hover.x>=0&&hover.y>=0&&hover.x<W&&hover.y<H){const p=tile(hover.x,hover.y);diamond(p,'#f1d77b66','#ffe39a')}
+if(selected){const p=tile(selected.x,selected.y);diamond(p,'#fff0a033','#fff0a0')}
+ctx.fillStyle='#d4d5a4';ctx.font='12px sans-serif';ctx.fillText('ISLA NUBLAR  •  SETOR '+String.fromCharCode(65+Math.floor(cam.x/100+13)%20),16,h-16);
+}
+function objectAt(x,y){return objects.find(o=>o.x===x&&o.y===y)}
+function place(x,y){if(x<0||y<0||x>=W||y>=H)return;if(tool==='erase'){const i=objects.findIndex(o=>o.x===x&&o.y===y);if(i>=0){objects.splice(i,1);notify('Construção removida.')}else notify('Nada para demolir aqui.');updateUI();draw();return}
+if(!tool)return;const old=objectAt(x,y);if(old){selected=old;showInspect(old);notify('Local ocupado.');draw();return}
+const d=defs[tool];if(money<d.cost){notify('Dinheiro insuficiente!');return}
+if(['herbivore','carnivore'].includes(tool)){const nearby=objects.filter(o=>Math.abs(o.x-x)+Math.abs(o.y-y)<4);if(nearby.some(o=>o.type==='herbivore'||o.type==='carnivore')){notify('Mantenha os recintos separados.');return}}
+objects.push({x,y,type:tool});if(mode!=='sandbox')money-=d.cost;selected=objects[objects.length-1];notify(d.name+' construído!');updateUI();showInspect(selected);draw()}
+function showInspect(o){$('inspect').innerHTML='<b style="color:#e9c56b">'+defs[o.type].emoji+' '+defs[o.type].name+'</b><br>Setor: '+(o.x+1)+', '+(o.y+1)+'<br>Estado: Operacional'+(o.type==='herbivore'||o.type==='carnivore'?'<br><button id="addDino" style="margin-top:8px">🧬 Incubar dinossauro — $ 4.000</button>':'');const b=$('addDino');if(b)b.onclick=()=>addDino(o)}
+function addDino(o){if(money<4000&&mode!=='sandbox'){notify('Dinheiro insuficiente!');return}if(mode!=='sandbox')money-=4000;objects.push({x:o.x,y:o.y,type:'dino',species:o.type==='herbivore'?'Triceratops':'Velociraptor'});notify('Incubação concluída: '+objects.at(-1).species);updateUI();draw()}
+function updateUI(){$('money').textContent=mode==='sandbox'?'∞': '$ '+Math.floor(money).toLocaleString('pt-BR');$('guests').textContent=guests;$('rating').textContent='★ '+rating.toFixed(1);$('dinoCount').textContent=objects.filter(o=>o.type==='dino').length;$('modeLabel').textContent=mode==='sandbox'?'SANDBOX • Criatividade livre':'CAMPANHA • Ilha inicial';$('summary').textContent=objects.length+' itens construídos • '+objects.filter(o=>o.type==='dino').length+' dinossauros • '+objects.filter(o=>['hotel','food','shop'].includes(o.type)).length+' serviços';if(mode==='sandbox')$('mission').innerHTML='<b>Modo Sandbox</b><br>Construa livremente, experimente e crie o parque dos seus sonhos.';else{$('mission').innerHTML='<b>Primeiros passos</b><br>Construa um recinto herbívoro, adicione um dinossauro e atraia 20 visitantes.<br><br><span style="color:#b7d7ad">Recintos: '+objects.filter(o=>o.type==='herbivore').length+'/1 • Dinossauros: '+objects.filter(o=>o.type==='dino').length+'/1 • Visitantes: '+guests+'/20</span>';if(objects.some(o=>o.type==='herbivore')&&objects.some(o=>o.type==='dino')&&guests>=20)$('mission').innerHTML='<b>✓ Objetivo concluído!</b><br>Seu parque está oficialmente aberto. Continue expandindo para desbloquear novas ilhas.'}}
+function gameLoop(){tick++;if(tick%90===0){hour++;if(hour>=24){hour=0;day++}if(objects.some(o=>o.type==='hotel'))guests+=Math.floor(1+Math.random()*3);if(objects.some(o=>o.type==='food'))guests+=Math.floor(Math.random()*2);if(mode==='campaign')money+=objects.filter(o=>['food','shop','hotel'].includes(o.type)).length*90-80;rating=Math.min(5,1+objects.filter(o=>o.type==='dino').length*.4+objects.filter(o=>['hotel','food','shop'].includes(o.type)).length*.2);updateUI();$('clock').textContent='Dia '+day+' • '+String(hour).padStart(2,'0')+':00'}requestAnimationFrame(gameLoop)}
+canvas.addEventListener('pointerdown',e=>{canvas.setPointerCapture(e.pointerId);drag={x:e.clientX,y:e.clientY,cx:cam.x,cy:cam.y,moved:false}});
+canvas.addEventListener('pointermove',e=>{const r=canvas.getBoundingClientRect();hover=screenToTile(e.clientX-r.left,e.clientY-r.top);if(drag){const dx=e.clientX-drag.x,dy=e.clientY-drag.y;if(Math.abs(dx)+Math.abs(dy)>5)drag.moved=true;if(drag.moved){cam.x=drag.cx+dx;cam.y=drag.cy+dy}}draw()});
+canvas.addEventListener('pointerup',e=>{if(!drag)return;if(!drag.moved){const r=canvas.getBoundingClientRect(),p=screenToTile(e.clientX-r.left,e.clientY-r.top);if(tool)place(p.x,p.y);else{selected=objectAt(p.x,p.y);if(selected)showInspect(selected);else $('inspect').textContent='Terreno vazio. Escolha uma ferramenta para construir.';draw()}}drag=null});
+canvas.addEventListener('wheel',e=>{e.preventDefault();zoom=Math.max(.55,Math.min(1.7,zoom+(e.deltaY<0?.08:-.08)));draw()},{passive:false});
+$('tools').addEventListener('click',e=>{const b=e.target.closest('button[data-tool]');if(!b)return;tool=b.dataset.tool;document.querySelectorAll('[data-tool]').forEach(x=>x.classList.toggle('active',x===b));notify('Ferramenta selecionada: '+defs[tool].name)});
+$('demolish').onclick=()=>{tool='erase';document.querySelectorAll('[data-tool]').forEach(x=>x.classList.remove('active'));notify('Clique em uma construção para demolir.')};
+$('campaign').onclick=()=>{mode='campaign';$('campaign').classList.add('active');$('sandbox').classList.remove('active');updateUI()};
+$('sandbox').onclick=()=>{mode='sandbox';money=999999;$('sandbox').classList.add('active');$('campaign').classList.remove('active');updateUI()};
+$('zoomIn').onclick=()=>{zoom=Math.min(1.7,zoom+.12);draw()};$('zoomOut').onclick=()=>{zoom=Math.max(.55,zoom-.12);draw()};$('resetView').onclick=()=>{cam={x:0,y:0};zoom=1;draw()};
+$('save').onclick=()=>{localStorage.setItem('jw-browser-save',JSON.stringify({world,objects,mode,money,guests,rating,day,hour}));notify('Parque salvo neste navegador!')};
+$('load').onclick=()=>{const s=localStorage.getItem('jw-browser-save');if(!s){notify('Nenhum salvamento encontrado.');return}try{const d=JSON.parse(s);world=d.world;objects=d.objects;mode=d.mode;money=d.money;guests=d.guests;rating=d.rating;day=d.day;hour=d.hour;updateUI();notify('Parque carregado!');draw()}catch{notify('Falha ao carregar o salvamento.')}};
+$('reset').onclick=()=>{if(confirm('Começar um parque novo? O progresso atual só será perdido se não estiver salvo.')){initWorld();cam={x:0,y:0};draw()}};
+$('expedition').onclick=()=>{if(money<8000&&mode!=='sandbox'){notify('Dinheiro insuficiente!');return}if(mode!=='sandbox')money-=8000;notify('Expedição enviada! Novas espécies em breve.');updateUI()};
+window.addEventListener('resize',resize);initWorld();resize();gameLoop();
+})();
+</script></body></html>
