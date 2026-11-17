@@ -1,0 +1,64 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="256" viewBox="0 0 512 256">
+<defs>
+ <linearGradient id="leaf" x2="0" y2="1"><stop stop-color="#83c96b"/><stop offset="1" stop-color="#28633d"/></linearGradient>
+ <linearGradient id="stone" x2="0" y2="1"><stop stop-color="#e5d6b5"/><stop offset="1" stop-color="#8f8064"/></linearGradient>
+ <linearGradient id="glass" x2="0" y2="1"><stop stop-color="#a9e5dc"/><stop offset="1" stop-color="#397c79"/></linearGradient>
+</defs>
+<!-- 0: triceratops -->
+<g transform="translate(8 8)" stroke="#243b2d" stroke-width="4" stroke-linejoin="round">
+ <ellipse cx="61" cy="83" rx="43" ry="25" fill="#91a85b"/><path d="M25 84 5 69 12 94 28 96" fill="#758d4c"/>
+ <path d="M31 99v18m18-16v17m37-18v17m15-23v22" stroke-width="9" stroke-linecap="round"/>
+ <path d="M78 67q23-22 39-2l8 21-20 16-27-8z" fill="#a9bd70"/>
+ <path d="m79 64-10-19 21 12m22 1 13-17-2 26" fill="#e7dfb6"/>
+ <path d="m111 82 18 7-16 8" fill="#d8c69a"/><circle cx="111" cy="73" r="3" fill="#17271e" stroke="none"/>
+ <path d="M76 58q-17-24-32-5l8 22q13 8 25-3z" fill="#d8c69a"/>
+</g>
+<!-- 1: velociraptor -->
+<g transform="translate(136 8)" stroke="#25372c" stroke-width="4" stroke-linejoin="round" stroke-linecap="round">
+ <path d="M18 84q-12-5-12-22 22 14 39 9 22-26 47-15l19 16-18 19-35 3-20 24-9-3 11-27-19 1-8 25-9-1 5-31z" fill="#b7a45c"/>
+ <path d="M78 62q13-35 34-26l10 15-13 17-22 5" fill="#c6b56b"/>
+ <path d="m111 52 22 8-19 7" fill="#e1c58b"/><circle cx="111" cy="49" r="3" fill="#17271e" stroke="none"/>
+ <path d="m38 88-4 29m29-27 8 28m-42-2 10 0m29 0 11 0" stroke-width="8"/>
+ <path d="M20 75Q-2 49 5 31q14 26 35 27" fill="none" stroke="#a28e4e" stroke-width="9"/>
+</g>
+<!-- 2: tree -->
+<g transform="translate(264 8)">
+ <ellipse cx="64" cy="112" rx="46" ry="12" fill="#244b32" opacity=".55"/>
+ <path d="M59 112 65 53h16l-5 59z" fill="#79543a" stroke="#4b382a" stroke-width="4"/>
+ <circle cx="65" cy="48" r="36" fill="url(#leaf)" stroke="#214d34" stroke-width="5"/>
+ <circle cx="38" cy="65" r="25" fill="#4c9b52" stroke="#214d34" stroke-width="4"/>
+ <circle cx="91" cy="68" r="26" fill="#367d45" stroke="#214d34" stroke-width="4"/>
+ <circle cx="58" cy="28" r="17" fill="#9bd875" opacity=".8"/>
+</g>
+<!-- 3: hotel -->
+<g transform="translate(392 8)" stroke="#3e4439" stroke-width="4" stroke-linejoin="round">
+ <path d="M10 66 64 35l54 31v53H10z" fill="url(#stone)"/>
+ <path d="m4 65 60-37 60 37-8 10-52-31-52 31z" fill="#8c4e38"/>
+ <path d="M24 78h19v19H24zm53 0h19v19H77z" fill="url(#glass)"/>
+ <path d="M53 83h23v36H53z" fill="#6f5941"/>
+ <path d="M14 109h101" stroke="#eee0c3"/>
+</g>
+<!-- 4: restaurant -->
+<g transform="translate(8 136)" stroke="#4a3b2e" stroke-width="4" stroke-linejoin="round">
+ <path d="M12 57h104v61H12z" fill="#e0c28c"/><path d="m5 58 59-32 59 32-8 10H13z" fill="#b94f3f"/>
+ <path d="M25 77h27v22H25zm50 0h27v22H75z" fill="#8bc6bd"/>
+ <path d="M52 91h24v27H52z" fill="#79543a"/>
+ <path d="M54 25h20V9H54z" fill="#f0d58a"/>
+</g>
+<!-- 5: shop -->
+<g transform="translate(136 136)" stroke="#41483d" stroke-width="4" stroke-linejoin="round">
+ <path d="M13 62h102v56H13z" fill="#d8d4bd"/><path d="M7 61 18 34h92l11 27z" fill="#5d9b8d"/>
+ <path d="M18 61h92" stroke="#e7dfc4" stroke-width="8"/>
+ <path d="M27 78h27v25H27zm48 0h27v40H75z" fill="#7bb8ac"/>
+</g>
+<!-- 6: power station -->
+<g transform="translate(264 136)" stroke="#4b4932" stroke-width="4" stroke-linejoin="round">
+ <path d="M12 60h104v58H12z" fill="#a9a78a"/><path d="m21 60 12-24h62l15 24z" fill="#777d67"/>
+ <path d="M77 36V9h20v27" fill="#8b927d"/><path d="M51 73 38 96h18l-5 17 26-31H59l8-9z" fill="#f1d16c" stroke="none"/>
+</g>
+<!-- 7: fence segment -->
+<g transform="translate(392 136)" stroke="#d9c9a4" stroke-width="7" stroke-linecap="round" fill="none">
+ <path d="M13 103 64 75l51 28M13 74l51-28 51 28M22 62v54m42-78v70m42-45v53" />
+ <path d="M13 74 64 102l51-28" stroke="#8b7655" stroke-width="4"/>
+</g>
+</svg>
