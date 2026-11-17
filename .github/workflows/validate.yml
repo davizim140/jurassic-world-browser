@@ -1,0 +1,29 @@
+name: Validate browser game
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Check HTML and JavaScript entrypoint
+        run: |
+          test -s index.html
+          node - <<'NODE'
+          const fs = require('fs');
+          const html = fs.readFileSync('index.html', 'utf8');
+          if (!html.includes('<canvas id="game"')) throw new Error('Canvas do jogo ausente');
+          if (!html.includes('localStorage')) throw new Error('Salvamento local ausente');
+          const scripts = [...html.matchAll(/<script>([\\s\\S]*?)<\\/script>/g)];
+          if (!scripts.length) throw new Error('Script principal ausente');
+          fs.writeFileSync('/tmp/game.js', scripts.map(x => x[1]).join('\n'));
+          console.log('HTML estrutural: OK');
+          NODE
+          node --check /tmp/game.js
