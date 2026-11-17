@@ -37,7 +37,7 @@ h2{font-size:12px;text-transform:uppercase;letter-spacing:.13em;color:var(--gold
 </div><button class="wide" id="demolish">🧹 Demolir construção</button></div>
 <div class="section"><h2>Controles</h2><p class="muted">Clique no terreno para construir. Arraste para mover a câmera. Use a roda do mouse para zoom.</p><div class="actionrow"><button id="zoomOut">−</button><button id="zoomIn">＋</button><button id="resetView">⌖</button></div></div>
 <div class="section"><button class="wide" id="save">💾 Salvar parque</button><button class="wide" id="load">📂 Carregar parque</button><button class="wide" id="reset">↻ Novo parque</button></div></aside>
-<div id="viewport"><canvas id="game"></canvas><div class="overlay"><div class="chip" id="modeLabel">CAMPANHA • Ilha inicial</div><div class="chip" id="clock">Dia 1 • 08:00</div></div><div id="toast"></div></div>
+<div id="viewport"><canvas id="game"></canvas><div class="overlay"><div class="chip" id="modeLabel">CAMPANHA • Ilha inicial</div><div class="chip" id="clock">Dia 1 • 08:00</div><div class="chip" id="biomeLabel">BIOMA • FLORESTA TROPICAL</div></div><div id="toast"></div></div>
 <aside class="right"><div class="section"><h2>Objetivos da campanha</h2><div class="mission" id="mission"><b>Primeiros passos</b><br>Construa um recinto herbívoro, adicione um dinossauro e atraia 20 visitantes.</div></div>
 <div class="section"><h2>Central de operações</h2><div id="inspect">Selecione uma construção ou escolha uma ferramenta para começar.</div></div>
 <div class="section"><h2>Expedições</h2><p class="muted">A equipe de pesquisa está pronta para descobrir novas espécies.</p><button class="wide" id="expedition">🧬 Iniciar expedição — $ 8.000</button></div>
@@ -49,16 +49,38 @@ const spriteAtlas=new Image();spriteAtlas.src='assets/park-sprites.svg';spriteAt
 const spriteCells={Triceratops:[0,0],Velociraptor:[1,0],forest:[2,0],hotel:[3,0],food:[0,1],shop:[1,1],power:[2,1],fence:[3,1]};
 function drawSprite(key,p,size){const cell=spriteCells[key];if(!cell||!spriteAtlas.complete||!spriteAtlas.naturalWidth)return false;ctx.drawImage(spriteAtlas,cell[0]*128,cell[1]*128,128,128,p.x-size*.5,p.y-size*.92,size,size);return true;}
 const $=id=>document.getElementById(id);
-const W=26,H=26;let world=[],objects=[],mode='campaign',tool=null,money=120000,guests=0,rating=1,day=1,hour=8,zoom=1,cam={x:0,y:0},drag=null,hover=null,selected=null,tick=0,toastTimer;
+const W=32,H=32;let world=[],objects=[],mode='campaign',tool=null,money=120000,guests=0,rating=1,day=1,hour=8,zoom=1,cam={x:0,y:0},drag=null,hover=null,selected=null,tick=0,toastTimer;
 const defs={path:{name:'Caminho',cost:120,emoji:'🟫'},fence:{name:'Cerca',cost:180,emoji:'🚧'},forest:{name:'Vegetação',cost:250,emoji:'🌳'},water:{name:'Lago',cost:450,emoji:'💧'},herbivore:{name:'Recinto herbívoro',cost:9000,emoji:'🦕'},carnivore:{name:'Recinto carnívoro',cost:14000,emoji:'🦖'},hotel:{name:'Hotel',cost:12000,emoji:'🏨'},food:{name:'Restaurante',cost:4500,emoji:'🍔'},shop:{name:'Loja',cost:3500,emoji:'🛍️'},power:{name:'Gerador',cost:6000,emoji:'⚡'}};
-function initWorld(){world=[];for(let y=0;y<H;y++)for(let x=0;x<W;x++)world.push({x,y,kind:(Math.random()>.93?'rock':'grass')});objects=[];objects.push({x:12,y:13,type:'path'});objects.push({x:13,y:13,type:'path'});money=mode==='sandbox'?999999:120000;guests=0;rating=1;day=1;hour=8;selected=null;updateUI()}
+function biomeAt(x,y){
+const nx=(x-W/2)/(W/2),ny=(y-H/2)/(H/2),edge=Math.max(Math.abs(nx),Math.abs(ny));
+if(edge>.88)return 'sand';
+if(y<8&&x>9&&x<25)return 'rock';
+if(y>21&&x<15)return 'swamp';
+if(x<9&&y>7&&y<25)return 'fern';
+return 'grass';
+}
+function hashTile(x,y){const n=Math.sin(x*127.1+y*311.7)*43758.5453;return n-Math.floor(n)}
+function biomeName(kind){return ({grass:'PLANÍCIE',fern:'FLORESTA TROPICAL',sand:'PRAIA',rock:'REGIÃO ROCHOSA',swamp:'PÂNTANO'})[kind]||'ILHA NUBLAR'}
+function initWorld(){world=[];for(let y=0;y<H;y++)for(let x=0;x<W;x++)world.push({x,y,kind:biomeAt(x,y)});objects=[];objects.push({x:12,y:13,type:'path'});objects.push({x:13,y:13,type:'path'});money=mode==='sandbox'?999999:120000;guests=0;rating=1;day=1;hour=8;selected=null;updateUI()}
 function notify(s){const t=$('toast');t.textContent=s;t.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.classList.remove('show'),1900)}
 function resize(){const r=view.getBoundingClientRect(),d=Math.min(devicePixelRatio||1,2);canvas.width=r.width*d;canvas.height=r.height*d;ctx.setTransform(d,0,0,d,0,0);draw()}
 function tile(x,y){const s=34*zoom,ox=view.clientWidth/2+cam.x,oy=90+cam.y;return{x:ox+(x-y)*s,y:oy+(x+y)*s*.5}}
 function screenToTile(px,py){const s=34*zoom,ox=view.clientWidth/2+cam.x,oy=90+cam.y;let a=(px-ox)/s,b=(py-oy)/(s*.5);return{x:Math.floor((a+b)/2),y:Math.floor((b-a)/2)}}
 function diamond(p,color,stroke){const s=34*zoom;ctx.beginPath();ctx.moveTo(p.x,p.y);ctx.lineTo(p.x+s,p.y+s*.5);ctx.lineTo(p.x,p.y+s);ctx.lineTo(p.x-s,p.y+s*.5);ctx.closePath();ctx.fillStyle=color;ctx.fill();if(stroke){ctx.strokeStyle=stroke;ctx.stroke()}}
 function draw(){const w=view.clientWidth,h=view.clientHeight;ctx.clearRect(0,0,w,h);ctx.fillStyle='#214a3b';ctx.fillRect(0,0,w,h);
-for(let y=0;y<H;y++)for(let x=0;x<W;x++){const p=tile(x,y),t=world[y*W+x];diamond(p,t.kind==='rock'?'#53675a':((x+y)%2?'#477b4d':'#4b8050'),'#386342')}
+for(let y=0;y<H;y++)for(let x=0;x<W;x++){
+const p=tile(x,y),t=world[y*W+x],v=hashTile(x,y);
+const palettes={grass:['#477b4d','#4b8050','#568653'],fern:['#286b43','#30794a','#39834d'],sand:['#b7a875','#c4b783','#d0c18c'],rock:['#68746a','#788276','#858b7a'],swamp:['#3c6952','#456f57','#4a765b']};
+const colors=palettes[t.kind]||palettes.grass;
+diamond(p,colors[Math.floor(v*colors.length)],'#315b40');
+ctx.save();
+if(t.kind==='grass'&&v>.64){ctx.fillStyle='#a0b86b';ctx.globalAlpha=.5;ctx.beginPath();ctx.arc(p.x+(v-.5)*15*zoom,p.y+8*zoom,1.5*zoom,0,Math.PI*2);ctx.fill()}
+if(t.kind==='fern'&&v>.45){ctx.strokeStyle='#83b96a';ctx.globalAlpha=.65;ctx.lineWidth=1.2*zoom;ctx.beginPath();ctx.moveTo(p.x-5*zoom,p.y+8*zoom);ctx.lineTo(p.x,p.y-1*zoom);ctx.lineTo(p.x+5*zoom,p.y+8*zoom);ctx.stroke()}
+if(t.kind==='sand'&&v>.58){ctx.fillStyle='#eee0ad';ctx.globalAlpha=.5;ctx.beginPath();ctx.arc(p.x+4*zoom,p.y+9*zoom,1.4*zoom,0,Math.PI*2);ctx.fill()}
+if(t.kind==='rock'&&v>.35){ctx.strokeStyle='#a8afa0';ctx.globalAlpha=.55;ctx.lineWidth=1.5*zoom;ctx.beginPath();ctx.moveTo(p.x-7*zoom,p.y+7*zoom);ctx.lineTo(p.x-2*zoom,p.y+2*zoom);ctx.lineTo(p.x+4*zoom,p.y+5*zoom);ctx.stroke()}
+if(t.kind==='swamp'&&v>.5){ctx.fillStyle='#9ab58a';ctx.globalAlpha=.35;ctx.beginPath();ctx.ellipse(p.x+5*zoom,p.y+7*zoom,4*zoom,1.8*zoom,-.2,0,Math.PI*2);ctx.fill()}
+ctx.restore();
+}
 for(const o of objects){const p=tile(o.x,o.y),s=34*zoom;ctx.save();
 if(o.type==='path'){diamond(p,'#b6a17a','#6e634e')}
 else if(o.type==='water'){diamond(p,'#338fa0','#74c6ce');ctx.fillStyle='#b5e8df';ctx.fillRect(p.x-3,p.y+s*.42,8,2)}
@@ -67,7 +89,7 @@ else if(o.type==='fence'){if(!drawSprite('fence',p,72*zoom)){ctx.strokeStyle='#d
 else if(o.type==='dino'){ctx.fillStyle='#253c2c';ctx.beginPath();ctx.ellipse(p.x,p.y+s*.35,s*.32,s*.13,0,0,7);ctx.fill();const species=o.species==='Triceratops'?'Triceratops':'Velociraptor';if(!drawSprite(species,p,76*zoom)){ctx.font=(22*zoom)+'px sans-serif';ctx.textAlign='center';ctx.fillText(species==='Triceratops'?'🦕':'🦖',p.x,p.y+s*.22)}}
 else{const spriteKey={hotel:'hotel',food:'food',shop:'shop',power:'power'}[o.type];if(spriteKey&&drawSprite(spriteKey,p,76*zoom)){}else{const colors={herbivore:'#c6a85c',carnivore:'#b85c45',hotel:'#d8d1b5',food:'#e1a34f',shop:'#6ea9a0',power:'#c6b84e'};ctx.fillStyle='#28382f';ctx.fillRect(p.x-s*.32,p.y-s*.18,s*.64,s*.55);ctx.fillStyle=colors[o.type]||'#aaa';ctx.fillRect(p.x-s*.28,p.y-s*.25,s*.56,s*.43);ctx.fillStyle='#e9e0c5';ctx.fillRect(p.x-s*.07,p.y+s*.03,s*.14,s*.22);ctx.font=(18*zoom)+'px sans-serif';ctx.textAlign='center';ctx.fillText(defs[o.type].emoji,p.x,p.y-s*.18)}}
 ctx.restore()}
-if(hover&&hover.x>=0&&hover.y>=0&&hover.x<W&&hover.y<H){const p=tile(hover.x,hover.y);diamond(p,'#f1d77b66','#ffe39a')}
+if(hover&&hover.x>=0&&hover.y>=0&&hover.x<W&&hover.y<H){const p=tile(hover.x,hover.y);diamond(p,'#f1d77b66','#ffe39a');$('biomeLabel').textContent='BIOMA • '+biomeName(world[hover.y*W+hover.x].kind)}else $('biomeLabel').textContent='BIOMA • ILHA NUBLAR'
 if(selected){const p=tile(selected.x,selected.y);diamond(p,'#fff0a033','#fff0a0')}
 ctx.fillStyle='#d4d5a4';ctx.font='12px sans-serif';ctx.fillText('ISLA NUBLAR  •  SETOR '+String.fromCharCode(65+Math.floor(cam.x/100+13)%20),16,h-16);
 }
